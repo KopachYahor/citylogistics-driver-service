@@ -45,8 +45,12 @@ public class DriverController {
 
     @PostMapping
     public ResponseEntity<DriverResponse> create(@RequestBody @Valid CreateDriverRequest request) {
-        // используем конструктор Driver — он сам ставит status, rating, createdAt
-        Driver driver = new Driver(request.getName(), request.getPhone(), DriverStatus.AVAILABLE);
+        Driver driver = new Driver(
+                request.getUserId(),
+                request.getName(),
+                request.getPhone(),
+                DriverStatus.AVAILABLE
+        );
         Driver saved = driverRepository.save(driver);
         return ResponseEntity.ok(DriverResponse.from(saved));
     }

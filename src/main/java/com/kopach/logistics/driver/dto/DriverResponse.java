@@ -8,6 +8,7 @@ import java.time.LocalDateTime;
 public class DriverResponse {
 
     private Long id;
+    private Long userId;
     private String name;
     private String phone;
     private String status;
@@ -20,6 +21,7 @@ public class DriverResponse {
     public static DriverResponse from(Driver driver) {
         DriverResponse r = new DriverResponse();
         r.id = driver.getId();
+        r.userId = driver.getUserId();
         r.name = driver.getName();
         r.phone = driver.getPhone();
         r.status = driver.getStatus().name();
@@ -29,6 +31,7 @@ public class DriverResponse {
     }
 
     public Long getId() { return id; }
+    public Long getUserId() { return userId; }
     public String getName() { return name; }
     public String getPhone() { return phone; }
     public String getStatus() { return status; }

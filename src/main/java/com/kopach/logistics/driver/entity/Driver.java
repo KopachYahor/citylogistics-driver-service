@@ -13,6 +13,9 @@ public class Driver {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Column(name = "user_id")
+    private Long userId;
+
     @Column(nullable = false)
     private String name;
 
@@ -32,7 +35,8 @@ public class Driver {
     public Driver() {
     }
 
-    public Driver(String name, String phone, DriverStatus status) {
+    public Driver(Long userId, String name, String phone, DriverStatus status) {
+        this.userId = userId;
         this.name = name;
         this.phone = phone;
         this.status = status;
@@ -42,6 +46,9 @@ public class Driver {
 
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
+
+    public Long getUserId() { return userId; }
+    public void setUserId(Long userId) { this.userId = userId; }
 
     public String getName() { return name; }
     public void setName(String name) { this.name = name; }
