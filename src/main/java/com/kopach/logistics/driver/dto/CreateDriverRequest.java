@@ -1,8 +1,12 @@
 package com.kopach.logistics.driver.dto;
 
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 
 public class CreateDriverRequest {
+
+    @NotNull
+    private Long userId;
 
     @NotBlank
     private String name;
@@ -13,10 +17,14 @@ public class CreateDriverRequest {
     public CreateDriverRequest() {
     }
 
-    public CreateDriverRequest(String name, String phone) {
+    public CreateDriverRequest(Long userId, String name, String phone) {
+        this.userId = userId;
         this.name = name;
         this.phone = phone;
     }
+
+    public Long getUserId() { return userId; }
+    public void setUserId(Long userId) { this.userId = userId; }
 
     public String getName() { return name; }
     public void setName(String name) { this.name = name; }
