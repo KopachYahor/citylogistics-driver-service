@@ -12,7 +12,8 @@ public class OrderAssignment {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "order_id", nullable = false)
+    // unique = true здесь только для документации: схему создаёт Flyway (V3__unique_order_assignment.sql)
+    @Column(name = "order_id", nullable = false, unique = true)
     private Long orderId;
 
     @Column(name = "driver_id", nullable = false)
