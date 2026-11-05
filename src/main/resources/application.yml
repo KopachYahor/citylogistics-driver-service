@@ -40,6 +40,12 @@ spring:
 server:
   port: 8082
 
+# Общий ключ, без которого REST API не отвечает (InternalApiKeyFilter).
+# НЕ хранится в git: задаётся переменной окружения INTERNAL_API_KEY,
+# одинаковой у core и driver-service. Без неё сервис не стартует.
+internal:
+  api-key: ${INTERNAL_API_KEY}
+
 logging:
   level:
     com.kopach.logistics: DEBUG
