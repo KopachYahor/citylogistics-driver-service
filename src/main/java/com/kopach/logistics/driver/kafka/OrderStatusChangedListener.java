@@ -4,6 +4,7 @@ import com.kopach.logistics.order.dto.OrderStatusChangedEvent;
 import com.kopach.logistics.driver.entity.Driver;
 import com.kopach.logistics.driver.entity.DriverStatus;
 import com.kopach.logistics.driver.repository.DriverRepository;
+import com.kopach.logistics.driver.repository.OrderAssignmentRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.kafka.annotation.KafkaListener;
@@ -16,9 +17,12 @@ public class OrderStatusChangedListener {
     private static final Logger log = LoggerFactory.getLogger(OrderStatusChangedListener.class);
 
     private final DriverRepository driverRepository;
+    private final OrderAssignmentRepository assignmentRepository;
 
-    public OrderStatusChangedListener(DriverRepository driverRepository) {
+    public OrderStatusChangedListener(DriverRepository driverRepository,
+                                      OrderAssignmentRepository assignmentRepository) {
         this.driverRepository = driverRepository;
+        this.assignmentRepository = assignmentRepository;
     }
 
     @KafkaListener(topics = "order.status-changed", groupId = "driver-service-group")
@@ -41,6 +45,17 @@ public class OrderStatusChangedListener {
         Driver driver = driverRepository.findById(event.getDriverId()).orElse(null);
         if (driver == null) {
             log.warn("Driver not found: {}", event.getDriverId());
+            return;
+        }
+
+        // Kafka может доставить событие повторно. Если водитель уже везёт другой заказ,
+        // старое событие «доставлено/отменено» не должно его освобождать.
+        boolean isCurrentOrder = assignmentRepository.findFirstByDriverIdOrderByIdDesc(driver.getId())
+                .map(assignment -> assignment.getOrderId().equals(event.getOrderId()))
+                .orElse(false);
+        if (!isCurrentOrder) {
+            log.info("Order {} is not the current order of driver {}, skipping",
+                    event.getOrderId(), driver.getId());
             return;
         }
 
