@@ -67,11 +67,6 @@
             <artifactId>spring-boot-starter-test</artifactId>
             <scope>test</scope>
         </dependency>
-        <dependency>
-            <groupId>org.springframework.kafka</groupId>
-            <artifactId>spring-kafka-test</artifactId>
-            <scope>test</scope>
-        </dependency>
         <!-- Временная PostgreSQL в Docker для тестов (как в core) -->
         <dependency>
             <groupId>org.testcontainers</groupId>
