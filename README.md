@@ -20,7 +20,7 @@
 ## Стек
 
 Java 21, Spring Boot 3.3, Spring Kafka (`@KafkaListener`), Spring Data JPA, PostgreSQL 15,
-Flyway (V1–V2), JUnit 5, Mockito, Testcontainers. Своя база `drivers` на порту 5433
+Flyway (V1–V3), JUnit 5, Mockito, Testcontainers. Своя база `drivers` на порту 5433
 (Database per Service).
 
 ## REST API
@@ -32,13 +32,21 @@ Flyway (V1–V2), JUnit 5, Mockito, Testcontainers. Своя база `drivers` 
 | `GET /api/drivers/{id}` | Водитель по id |
 | `POST /api/drivers` | Создать водителя: `userId`, `name`, `phone` |
 
-**Аутентификации нет** (см. ограничения).
+Каждый запрос должен нести заголовок `X-Internal-Api-Key` с общим ключом
+(`InternalApiKeyFilter`), иначе ответ `401 {"error":"Unauthorized"}`. Ключ задаётся
+переменной окружения `INTERNAL_API_KEY`, одинаковой у core и driver-service. Пример:
+
+```
+curl localhost:8082/api/drivers -H "X-Internal-Api-Key: <общий_ключ>"
+```
 
 ## Ключевые решения
 
 - **Идемпотентность назначения.** Kafka доставляет «хотя бы один раз», поэтому
   `OrderCreatedListener` сначала проверяет `existsByOrderId`. Повтор события не создаёт
-  второе назначение.
+  второе назначение. Если два экземпляра сервиса пройдут проверку одновременно,
+  второе назначение не даст вставить `UNIQUE` на `order_assignments.order_id`
+  (миграция V3): транзакция откатится, а при повторной попытке проверка уже сработает.
 - **Освобождается только текущий заказ водителя.** `OrderStatusChangedListener` сверяет
   заказ из события с последним назначением водителя. Старое повторное событие не освободит
   водителя, который уже везёт другой заказ.
@@ -52,11 +60,13 @@ Flyway (V1–V2), JUnit 5, Mockito, Testcontainers. Своя база `drivers` 
 ## Запуск
 
 1. Поднять инфраструктуру из core: `cd ../citylogistics-core && docker compose up -d`.
-2. Запустить сервис (порт 8082):
+2. Запустить сервис (порт 8082) с тем же общим ключом, что у core:
    ```
+   $env:INTERNAL_API_KEY="<общий_ключ>"
    .\mvnw.cmd spring-boot:run
    ```
-   На macOS/Linux: `./mvnw spring-boot:run`.
+   На macOS/Linux: `export INTERNAL_API_KEY=...` и `./mvnw spring-boot:run`.
+   Как сгенерировать ключ — в README core.
 
 Порядок запуска core и driver-service не важен: события подождут в Kafka. Но для
 регистрации водителя driver-service должен уже работать.
@@ -69,21 +79,19 @@ Flyway (V1–V2), JUnit 5, Mockito, Testcontainers. Своя база `drivers` 
 
 Нужен запущенный Docker. Тест запуска приложения поднимает временную PostgreSQL
 (Testcontainers) и проверяет миграции и соответствие сущностей схеме. Слушатели Kafka
-покрыты unit-тестами на Mockito (`OrderCreatedListenerTest`, `OrderStatusChangedListenerTest`).
-Рабочая база на 5433 не используется.
+покрыты unit-тестами на Mockito (`OrderCreatedListenerTest`, `OrderStatusChangedListenerTest`),
+защита REST — тестом на MockMvc (`DriverControllerApiKeyTest`).
+Рабочая база на 5433 не используется, `INTERNAL_API_KEY` для тестов не нужен.
 
 ## Известные ограничения
 
-1. **REST открыт без аутентификации.** Любой, у кого есть доступ к порту 8082, видит
-   водителей с телефонами и может создать водителя. Подходит только для локальной
-   разработки.
+1. **Защита REST простая.** Один общий ключ без срока жизни и ролей; при утечке его
+   нужно сменить вручную в обоих сервисах. В продакшене обычно используют токены
+   сервисов (OAuth2 client credentials) или mTLS.
 2. **Нет повторной попытки назначения.** Если свободного водителя нет, заказ остаётся
    `NEW`, и к нему никто не возвращается.
-3. **Идемпотентность рассчитана на один экземпляр сервиса.** Два экземпляра могут
-   одновременно пройти проверку `existsByOrderId`. Надёжная защита — `UNIQUE` на
-   `order_assignments.order_id` (не добавлен).
-4. **Двойная запись.** Событие `driver.assigned` отправляется в Kafka до коммита транзакции,
+3. **Двойная запись.** Событие `driver.assigned` отправляется в Kafka до коммита транзакции,
    результат отправки не проверяется. При сбое Kafka core не узнает о назначении.
-5. **DTO событий продублированы.** `OrderCreatedEvent` и `OrderStatusChangedEvent` лежат
+4. **DTO событий продублированы.** `OrderCreatedEvent` и `OrderStatusChangedEvent` лежат
    в пакете `com.kopach.logistics.order.dto`, как в core: `JsonSerializer` передаёт полное
    имя класса в заголовке `__TypeId__`, и оно должно совпадать в обоих сервисах.
