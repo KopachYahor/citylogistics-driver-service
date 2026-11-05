@@ -6,6 +6,7 @@ import com.kopach.logistics.driver.entity.Driver;
 import com.kopach.logistics.driver.entity.DriverStatus;
 import com.kopach.logistics.driver.repository.DriverRepository;
 import jakarta.validation.Valid;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -52,6 +53,6 @@ public class DriverController {
                 DriverStatus.AVAILABLE
         );
         Driver saved = driverRepository.save(driver);
-        return ResponseEntity.ok(DriverResponse.from(saved));
+        return ResponseEntity.status(HttpStatus.CREATED).body(DriverResponse.from(saved)); // 201 Created
     }
 }
