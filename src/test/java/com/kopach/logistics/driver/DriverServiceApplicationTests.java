@@ -13,7 +13,10 @@ import org.testcontainers.containers.PostgreSQLContainer;
  *
  * База — временная PostgreSQL в Docker (Testcontainers), рабочая БД на 5433 не трогается.
  */
-@SpringBootTest(properties = "spring.kafka.listener.auto-startup=false") // Kafka для этого теста не нужна
+@SpringBootTest(properties = {
+        "spring.kafka.listener.auto-startup=false", // Kafka для этого теста не нужна
+        "internal.api-key=test-internal-key"        // ключ только для тестов
+})
 class DriverServiceApplicationTests {
 
     static final PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>("postgres:15");
