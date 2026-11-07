@@ -62,13 +62,13 @@ curl localhost:8082/api/drivers -H "X-Internal-Api-Key: <общий_ключ>"
 ## Запуск
 
 1. Поднять инфраструктуру из core: `cd ../citylogistics-core && docker compose up -d`.
-2. Запустить сервис (порт 8082) с тем же общим ключом, что у core:
+2. Скопировать `.env.example` в `.env` и вписать `INTERNAL_API_KEY` — тот же, что в `.env` core
+   (Spring читает `.env` сам; можно и переменной окружения). Как сгенерировать ключ — в README core.
+3. Запустить сервис (порт 8082):
    ```
-   $env:INTERNAL_API_KEY="<общий_ключ>"
    .\mvnw.cmd spring-boot:run
    ```
-   На macOS/Linux: `export INTERNAL_API_KEY=...` и `./mvnw spring-boot:run`.
-   Как сгенерировать ключ — в README core.
+   На macOS/Linux: `./mvnw spring-boot:run`. Или из IntelliJ: `DriverServiceApplication`.
 
 Порядок запуска core и driver-service не важен: события подождут в Kafka. Но для
 регистрации водителя driver-service должен уже работать.
