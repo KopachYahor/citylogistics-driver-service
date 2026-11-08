@@ -4,7 +4,7 @@
 на новый заказ и освобождает его, когда заказ доставлен или отменён.
 
 Общее описание проекта, схема и полная инструкция запуска — в README
-[citylogistics-core](../citylogistics-core). Инфраструктура (Kafka, обе базы) поднимается
+[citylogistics-core](https://github.com/KopachYahor/citylogistics-core). Инфраструктура (Kafka, обе базы) поднимается
 оттуда же.
 
 ## Роль в системе
