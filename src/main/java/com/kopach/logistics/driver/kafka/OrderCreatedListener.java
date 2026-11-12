@@ -36,13 +36,12 @@ public class OrderCreatedListener {
         log.info("Received order.created: orderId={}, from={}, to={}",
                 event.getOrderId(), event.getFromAddress(), event.getToAddress());
 
-        // идемпотентность: если заказ уже назначен — выходим
+        // идемпотентность: повторное событие пропускаем
         if (assignmentRepository.existsByOrderId(event.getOrderId())) {
             log.warn("Order {} already assigned, skipping", event.getOrderId());
             return;
         }
 
-        // ищем свободного водителя
         Driver driver = driverRepository.findFirstByStatus(DriverStatus.AVAILABLE)
                 .orElse(null);
 
@@ -51,17 +50,14 @@ public class OrderCreatedListener {
             return;
         }
 
-        // создаём назначение
         OrderAssignment assignment = new OrderAssignment(event.getOrderId(), driver.getId());
         assignmentRepository.save(assignment);
 
-        // помечаем водителя BUSY
         driver.setStatus(DriverStatus.BUSY);
         driverRepository.save(driver);
 
         log.info("Assigned driver {} to order {}", driver.getId(), event.getOrderId());
 
-        // публикуем событие driver.assigned
         publisher.publish(new DriverAssignedEvent(event.getOrderId(), driver.getId()));
     }
 }

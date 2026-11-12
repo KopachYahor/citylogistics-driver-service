@@ -13,14 +13,7 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 
-/**
- * Пускает к REST API (/api/**) только того, кто знает общий ключ — то есть core.
- *
- * core отправляет ключ в заголовке X-Internal-Api-Key. Без заголовка или с неверным
- * ключом — 401. Ключ задаётся переменной окружения INTERNAL_API_KEY, одинаковой
- * у обоих сервисов. Это простая защита сервис-сервис для учебного проекта:
- * у ключа нет срока жизни и ролей, его нельзя выдать отдельному клиенту.
- */
+// Пускает к /api/** только с общим ключом core (X-Internal-Api-Key), иначе 401
 @Component
 public class InternalApiKeyFilter extends OncePerRequestFilter {
 
@@ -38,7 +31,7 @@ public class InternalApiKeyFilter extends OncePerRequestFilter {
 
     @Override
     protected boolean shouldNotFilter(@NonNull HttpServletRequest request) {
-        // защищаем только API; служебные адреса вроде /error не трогаем
+        // служебные адреса вроде /error не трогаем
         return !request.getRequestURI().startsWith("/api/");
     }
 
@@ -48,8 +41,7 @@ public class InternalApiKeyFilter extends OncePerRequestFilter {
                                     @NonNull FilterChain filterChain) throws ServletException, IOException {
         String providedKey = request.getHeader(HEADER);
 
-        // MessageDigest.isEqual сравнивает за одинаковое время, сколько бы символов ни совпало:
-        // так ключ нельзя подобрать по времени ответа
+        // Сравнение за одинаковое время: ключ нельзя подобрать по времени ответа
         if (providedKey == null
                 || !MessageDigest.isEqual(expectedKey, providedKey.getBytes(StandardCharsets.UTF_8))) {
             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);

@@ -16,10 +16,6 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-/**
- * API-тест защиты REST: без правильного X-Internal-Api-Key — 401.
- * @WebMvcTest поднимает только веб-слой (контроллер и фильтры), без базы и Kafka.
- */
 @WebMvcTest(DriverController.class)
 @TestPropertySource(properties = "internal.api-key=test-internal-key")
 class DriverControllerApiKeyTest {

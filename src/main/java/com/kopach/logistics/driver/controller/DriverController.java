@@ -53,6 +53,6 @@ public class DriverController {
                 DriverStatus.AVAILABLE
         );
         Driver saved = driverRepository.save(driver);
-        return ResponseEntity.status(HttpStatus.CREATED).body(DriverResponse.from(saved)); // 201 Created
+        return ResponseEntity.status(HttpStatus.CREATED).body(DriverResponse.from(saved));
     }
 }

@@ -9,7 +9,6 @@ public interface OrderAssignmentRepository extends JpaRepository<OrderAssignment
 
     boolean existsByOrderId(Long orderId);
 
-    // Последнее назначение водителя = заказ, который он везёт сейчас.
-    // id растёт с каждой новой записью (BIGSERIAL), поэтому самое новое — с наибольшим id.
+    // Последнее назначение — текущий заказ водителя (id растёт)
     Optional<OrderAssignment> findFirstByDriverIdOrderByIdDesc(Long driverId);
 }
