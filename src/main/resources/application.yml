@@ -2,9 +2,7 @@ spring:
   application:
     name: driver-service
   config:
-    # Секреты для локального запуска можно положить в файл .env в корне проекта
-    # (образец — .env.example). Файла нет — не страшно (optional), тогда значения
-    # берутся из переменных окружения. .env в git не попадает (.gitignore).
+    # Локальные секреты из .env (образец: .env.example). Переменные окружения важнее
     import: optional:file:.env[.properties]
 
   datasource:
@@ -29,18 +27,14 @@ spring:
       key-serializer: org.apache.kafka.common.serialization.StringSerializer
       value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
       properties:
-        # Если Kafka недоступна, send() по умолчанию ждёт брокер до 60 секунд, и всё это
-        # время висит транзакция слушателя. Ждём не больше 5 секунд.
+        # По умолчанию send() ждёт брокер 60 с, держа транзакцию слушателя
         max.block.ms: 5000
     consumer:
       group-id: driver-service-group
-      # Если у группы ещё нет сохранённого offset (самый первый запуск), читать топик
-      # с начала. С latest заказы, созданные до первого старта сервиса, терялись бы.
+      # Первый запуск группы: читать с начала, чтобы не пропустить ранние заказы
       auto-offset-reset: earliest
       key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
-      # Обёртка над JsonDeserializer: если сообщение не разбирается (битый JSON),
-      # оно логируется и пропускается. Без неё консьюмер бесконечно спотыкается
-      # на этом сообщении, и все следующие события перестают обрабатываться.
+      # Битое сообщение логируется и пропускается, а не блокирует консьюмер
       value-deserializer: org.springframework.kafka.support.serializer.ErrorHandlingDeserializer
       properties:
         spring.deserializer.value.delegate.class: org.springframework.kafka.support.serializer.JsonDeserializer
@@ -49,9 +43,7 @@ spring:
 server:
   port: 8082
 
-# Общий ключ, без которого REST API не отвечает (InternalApiKeyFilter).
-# НЕ хранится в git: задаётся переменной окружения INTERNAL_API_KEY,
-# одинаковой у core и driver-service. Без неё сервис не стартует.
+# Общий ключ с core, в git не хранится
 internal:
   api-key: ${INTERNAL_API_KEY}
 

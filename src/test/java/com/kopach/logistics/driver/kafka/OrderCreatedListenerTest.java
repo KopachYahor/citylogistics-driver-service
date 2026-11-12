@@ -24,9 +24,6 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-/**
- * Unit-тесты назначения водителя на новый заказ (order.created).
- */
 @ExtendWith(MockitoExtension.class)
 class OrderCreatedListenerTest {
 

@@ -12,7 +12,7 @@ public class OrderAssignment {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    // unique = true здесь только для документации: схему создаёт Flyway (V3__unique_order_assignment.sql)
+    // для наглядности: ограничение создаёт миграция V3
     @Column(name = "order_id", nullable = false, unique = true)
     private Long orderId;
 
