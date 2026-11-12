@@ -48,8 +48,7 @@ public class OrderStatusChangedListener {
             return;
         }
 
-        // Kafka может доставить событие повторно. Если водитель уже везёт другой заказ,
-        // старое событие «доставлено/отменено» не должно его освобождать.
+        // Повторное старое событие не должно освободить водителя, который везёт другой заказ
         boolean isCurrentOrder = assignmentRepository.findFirstByDriverIdOrderByIdDesc(driver.getId())
                 .map(assignment -> assignment.getOrderId().equals(event.getOrderId()))
                 .orElse(false);

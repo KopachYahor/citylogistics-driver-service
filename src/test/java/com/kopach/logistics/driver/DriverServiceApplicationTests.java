@@ -6,13 +6,7 @@ import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import org.testcontainers.containers.PostgreSQLContainer;
 
-/**
- * Проверяет, что приложение стартует: все бины создаются, Flyway применяет
- * миграции V1–V2 на пустую базу, а Hibernate (ddl-auto: validate) подтверждает,
- * что сущности совпадают со схемой.
- *
- * База — временная PostgreSQL в Docker (Testcontainers), рабочая БД на 5433 не трогается.
- */
+// Старт приложения: миграции применяются, сущности совпадают со схемой (ddl-auto: validate)
 @SpringBootTest(properties = {
         "spring.kafka.listener.auto-startup=false", // Kafka для этого теста не нужна
         "internal.api-key=test-internal-key"        // ключ только для тестов
