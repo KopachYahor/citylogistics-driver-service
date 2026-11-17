@@ -40,6 +40,9 @@ Flyway (V1–V3), JUnit 5, Mockito, Testcontainers. Своя база `drivers` 
 curl localhost:8082/api/drivers -H "X-Internal-Api-Key: <общий_ключ>"
 ```
 
+Без ключа доступен только `GET /actuator/health` (Spring Boot Actuator): `{"status":"UP"}`,
+если сервис и его БД работают, иначе `DOWN` и код 503. Остальные эндпоинты Actuator наружу не открыты.
+
 ## Ключевые решения
 
 - **Идемпотентность назначения.** Kafka доставляет «хотя бы один раз», поэтому

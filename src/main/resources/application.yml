@@ -43,6 +43,17 @@ spring:
 server:
   port: 8082
 
+management:
+  endpoints:
+    web:
+      exposure:
+        # Наружу только health: остальные эндпоинты Actuator раскрывают конфигурацию
+        include: health
+  endpoint:
+    health:
+      # Только UP/DOWN, без деталей о БД и диске
+      show-details: never
+
 # Общий ключ с core, в git не хранится
 internal:
   api-key: ${INTERNAL_API_KEY}
