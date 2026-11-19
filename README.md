@@ -64,7 +64,16 @@ curl localhost:8082/api/drivers -H "X-Internal-Api-Key: <общий_ключ>"
 
 ## Запуск
 
-1. Поднять инфраструктуру из core: `cd ../citylogistics-core && docker compose up -d`.
+**Весь проект в Docker.** Сервис собирается своим `Dockerfile` (двухэтапная сборка: Maven → JRE,
+запуск не от root) и запускается из `docker-compose.yml` репозитория core вместе с базами и Kafka.
+Этот репозиторий должен лежать рядом с core. Инструкция — в README core, раздел «Запуск с нуля»:
+`cd ../citylogistics-core && docker compose up -d --build`. В этом случае `.env` здесь не нужен:
+ключ берётся из `.env` core.
+
+**Из IDE (для разработки):**
+
+1. Поднять только инфраструктуру из core:
+   `cd ../citylogistics-core && docker compose up -d postgres postgres-drivers kafka kafka-ui`.
 2. Скопировать `.env.example` в `.env` и вписать `INTERNAL_API_KEY` — тот же, что в `.env` core
    (Spring читает `.env` сам; можно и переменной окружения). Как сгенерировать ключ — в README core.
 3. Запустить сервис (порт 8082):
