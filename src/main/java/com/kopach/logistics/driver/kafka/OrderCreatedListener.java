@@ -13,6 +13,8 @@ import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Optional;
+
 @Component
 public class OrderCreatedListener {
 
@@ -36,9 +38,14 @@ public class OrderCreatedListener {
         log.info("Received order.created: orderId={}, from={}, to={}",
                 event.getOrderId(), event.getFromAddress(), event.getToAddress());
 
-        // идемпотентность: повторное событие пропускаем
-        if (assignmentRepository.existsByOrderId(event.getOrderId())) {
-            log.warn("Order {} already assigned, skipping", event.getOrderId());
+        // Идемпотентность: второго назначения не создаём. Но прежнее назначение отправляем ещё раз:
+        // core повторяет order.created для заказов, которые долго в NEW, — значит, он мог не получить
+        // driver.assigned (например, Kafka потеряла событие). Core обрабатывает повтор идемпотентно
+        Optional<OrderAssignment> existing = assignmentRepository.findByOrderId(event.getOrderId());
+        if (existing.isPresent()) {
+            log.info("Order {} already assigned to driver {}, re-sending driver.assigned",
+                    event.getOrderId(), existing.get().getDriverId());
+            publisher.publish(new DriverAssignedEvent(event.getOrderId(), existing.get().getDriverId()));
             return;
         }
 

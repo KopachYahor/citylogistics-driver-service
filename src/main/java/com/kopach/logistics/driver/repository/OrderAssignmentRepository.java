@@ -7,7 +7,8 @@ import java.util.Optional;
 
 public interface OrderAssignmentRepository extends JpaRepository<OrderAssignment, Long> {
 
-    boolean existsByOrderId(Long orderId);
+    // order_id уникален (V3), поэтому назначение у заказа одно
+    Optional<OrderAssignment> findByOrderId(Long orderId);
 
     // Последнее назначение — текущий заказ водителя (id растёт)
     Optional<OrderAssignment> findFirstByDriverIdOrderByIdDesc(Long driverId);

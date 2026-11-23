@@ -42,7 +42,7 @@ class OrderCreatedListenerTest {
     @Test
     void newOrder_shouldAssignAvailableDriverAndPublishEvent() {
         Driver driver = driver(5L, DriverStatus.AVAILABLE);
-        when(assignmentRepository.existsByOrderId(100L)).thenReturn(false);
+        when(assignmentRepository.findByOrderId(100L)).thenReturn(Optional.empty());
         when(driverRepository.findFirstByStatus(DriverStatus.AVAILABLE)).thenReturn(Optional.of(driver));
 
         listener.handleOrderCreated(orderCreated(100L));
@@ -62,25 +62,29 @@ class OrderCreatedListenerTest {
     }
 
     @Test
-    void repeatedEvent_shouldNotCreateSecondAssignment() {
-        // идемпотентность: Kafka доставила order.created второй раз
-        when(assignmentRepository.existsByOrderId(100L)).thenReturn(true);
+    void repeatedEvent_shouldNotCreateSecondAssignmentButResendIt() {
+        // идемпотентность: Kafka доставила order.created второй раз или core повторил его,
+        // потому что не получил driver.assigned
+        when(assignmentRepository.findByOrderId(100L)).thenReturn(Optional.of(new OrderAssignment(100L, 7L)));
 
         listener.handleOrderCreated(orderCreated(100L));
 
         verify(driverRepository, never()).findFirstByStatus(any());
         verify(assignmentRepository, never()).save(any());
-        verify(publisher, never()).publish(any());
+        ArgumentCaptor<DriverAssignedEvent> event = ArgumentCaptor.forClass(DriverAssignedEvent.class);
+        verify(publisher).publish(event.capture());
+        assertThat(event.getValue().getOrderId()).isEqualTo(100L);
+        assertThat(event.getValue().getDriverId()).isEqualTo(7L);
     }
 
     @Test
     void noAvailableDriver_shouldDoNothing() {
-        when(assignmentRepository.existsByOrderId(100L)).thenReturn(false);
+        when(assignmentRepository.findByOrderId(100L)).thenReturn(Optional.empty());
         when(driverRepository.findFirstByStatus(DriverStatus.AVAILABLE)).thenReturn(Optional.empty());
 
         listener.handleOrderCreated(orderCreated(100L));
 
-        // заказ остаётся NEW: повторной попытки нет (известное ограничение, см. README)
+        // заказ остаётся NEW, пока core не повторит order.created (UnassignedOrderRetryScheduler)
         verify(assignmentRepository, never()).save(any());
         verify(publisher, never()).publish(any());
     }
